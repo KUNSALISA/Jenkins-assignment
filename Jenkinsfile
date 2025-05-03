@@ -96,14 +96,16 @@ pipeline {
         }
 
         stage('Build Frontend') {
-            agent {
-                docker {
-                    image 'node:18'
-                    args '-v /var/run/docker.sock:/var/run/docker.sock'
-                }
-            }
             steps {
                 dir('frontend') {
+                    echo "Installing Node.js & npm..."
+                    sh '''
+                        curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+                        apt-get install -y nodejs
+                        node -v
+                        npm -v
+                    '''
+
                     echo "Installing dependencies..."
                     sh 'npm ci'
 
@@ -114,15 +116,12 @@ pipeline {
         }
 
         stage('Deploy to Firebase') {
-            agent {
-                docker {
-                    image 'node:18'
-                }
-            }
             steps {
                 dir('frontend') {
-                    echo "Deploying to Firebase..."
+                    echo "Installing firebase-tools..."
                     sh 'npm install -g firebase-tools'
+
+                    echo "Deploying to Firebase..."
                     sh 'firebase deploy --token "$FIREBASE_TOKEN"'
                 }
             }
