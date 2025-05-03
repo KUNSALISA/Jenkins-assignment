@@ -8,26 +8,25 @@
 
 # USER jenkins
 
-FROM jenkins/jenkins:lts
+# Build stage
+FROM node:20-alpine AS build
 
-USER root
+WORKDIR /app
 
-# ติดตั้ง Docker CLI (ไว้ใช้ docker build, compose)
-RUN apt-get update && apt-get install -y \
-  docker.io \
-  curl \
-  gnupg \
-  ca-certificates \
-  sudo
+COPY frontend/package*.json ./frontend/
+RUN cd frontend && npm ci
 
-# ติดตั้ง Node.js + npm (ใช้ Node.js v18)
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs
+COPY frontend ./frontend
+RUN cd frontend && npm run build
 
-# ติดตั้ง Firebase CLI แบบ global
-RUN npm install -g firebase-tools
+# Serve stage
+FROM node:20-alpine
 
-# ให้ user jenkins ใช้ docker ได้
-RUN usermod -aG docker jenkins
+WORKDIR /app
 
-USER jenkins
+RUN npm install -g serve
+
+COPY --from=build /app/frontend/dist ./
+
+EXPOSE 8080
+CMD ["serve", "-s", ".", "-l", "8080"]
