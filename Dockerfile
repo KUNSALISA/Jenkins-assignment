@@ -1,32 +1,33 @@
-# FROM jenkins/jenkins:lts
+FROM jenkins/jenkins:lts
 
-# USER root
+USER root
 
-# RUN apt-get update && apt-get install -y docker.io
+RUN apt-get update && apt-get install -y docker.io
 
-# RUN usermod -aG docker jenkins
+RUN usermod -aG docker jenkins
 
-# USER jenkins
+USER jenkins
 
 # Build stage
-FROM node:20-alpine AS build
 
-WORKDIR /app
+# FROM node:20-alpine AS build
 
-COPY frontend/package*.json ./frontend/
-RUN cd frontend && npm ci
+# WORKDIR /app
 
-COPY frontend ./frontend
-RUN cd frontend && npm run build
+# COPY frontend/package*.json ./frontend/
+# RUN cd frontend && npm ci
 
-# Serve stage
-FROM node:20-alpine
+# COPY frontend ./frontend
+# RUN cd frontend && npm run build
 
-WORKDIR /app
+# # Serve stage
+# FROM node:20-alpine
 
-RUN npm install -g serve
+# WORKDIR /app
 
-COPY --from=build /app/frontend/dist ./
+# RUN npm install -g serve
 
-EXPOSE 8080
-CMD ["serve", "-s", ".", "-l", "8080"]
+# COPY --from=build /app/frontend/dist ./
+
+# EXPOSE 8080
+# CMD ["serve", "-s", ".", "-l", "8080"]
