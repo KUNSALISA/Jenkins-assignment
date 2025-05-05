@@ -26,7 +26,11 @@
 // }
 
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'node:18'  // ใช้ Node.js 18 ที่มี npm ติดตั้งแล้ว
+        }
+    }
     environment {
         FIREBASE_TOKEN = credentials('firebase-token')
     }
@@ -38,6 +42,12 @@ pipeline {
             steps {
                 echo "Cloning repo..."
                 checkout scm
+            }
+        }
+        stage('Install Firebase CLI') {
+            steps {
+                echo "Installing Firebase CLI globally..."
+                sh 'npm install -g firebase-tools'
             }
         }
         stage('Build Frontend') {
@@ -52,6 +62,10 @@ pipeline {
         stage('Test Frontend') {
             steps {
                 echo "Running frontend tests..."
+                dir('frontend') {
+                    // เพิ่ม test ได้ภายหลัง
+                    sh 'echo "No tests configured yet."'
+                }
             }
         }
         stage('Deploy to Firebase') {
