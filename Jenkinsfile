@@ -44,7 +44,7 @@ pipeline {
             steps {
                 echo "Installing dependencies & building frontend..."
                 dir('frontend') {
-                    // sh 'npm install'
+                    sh 'npm install'
                     sh 'npm run build'
                 }
             }
