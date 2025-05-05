@@ -26,11 +26,7 @@
 // }
 
 pipeline {
-    agent {
-        docker {
-            image 'node:18'  // ใช้ Node.js 18 ที่มี npm ติดตั้งแล้ว
-        }
-    }
+    agent any
     environment {
         FIREBASE_TOKEN = credentials('firebase-token')
     }
@@ -38,18 +34,34 @@ pipeline {
         githubPush()  
     }
     stages {
+
         stage('Clone') {
             steps {
                 echo "Cloning repo..."
                 checkout scm
             }
         }
-        stage('Install Firebase CLI') {
+
+        stage('Setup Environment') {
             steps {
-                echo "Installing Firebase CLI globally..."
-                sh 'npm install -g firebase-tools'
+                echo "Installing Node.js and Firebase CLI..."
+                sh '''
+                    if ! command -v node > /dev/null; then
+                        curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+                        sudo apt-get install -y nodejs
+                    fi
+                '''
+                sh '''
+                    if ! command -v firebase > /dev/null; then
+                        sudo npm install -g firebase-tools
+                    fi
+                '''
+                sh 'node -v'
+                sh 'npm -v'
+                sh 'firebase --version'
             }
         }
+
         stage('Build Frontend') {
             steps {
                 echo "Installing dependencies & building frontend..."
@@ -59,15 +71,13 @@ pipeline {
                 }
             }
         }
+
         stage('Test Frontend') {
             steps {
                 echo "Running frontend tests..."
-                dir('frontend') {
-                    // เพิ่ม test ได้ภายหลัง
-                    sh 'echo "No tests configured yet."'
-                }
             }
         }
+
         stage('Deploy to Firebase') {
             steps {
                 echo "Deploying to Firebase Hosting..."
