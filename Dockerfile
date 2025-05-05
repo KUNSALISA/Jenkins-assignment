@@ -1,33 +1,27 @@
+# FROM jenkins/jenkins:lts
+
+# USER root
+
+# RUN apt-get update && apt-get install -y docker.io
+
+# RUN usermod -aG docker jenkins
+
+# USER jenkins
+
 FROM jenkins/jenkins:lts
 
 USER root
 
-RUN apt-get update && apt-get install -y docker.io
+# ติดตั้ง docker สำหรับ Jenkins
+RUN apt-get update && \
+    apt-get install -y docker.io curl gnupg && \
+    usermod -aG docker jenkins
 
-RUN usermod -aG docker jenkins
+# ติดตั้ง Node.js และ npm (ใช้สำหรับ firebase-tools)
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs
+
+# ติดตั้ง Firebase CLI
+RUN npm install -g firebase-tools
 
 USER jenkins
-
-# Build stage
-
-# FROM node:20-alpine AS build
-
-# WORKDIR /app
-
-# COPY frontend/package*.json ./frontend/
-# RUN cd frontend && npm ci
-
-# COPY frontend ./frontend
-# RUN cd frontend && npm run build
-
-# # Serve stage
-# FROM node:20-alpine
-
-# WORKDIR /app
-
-# RUN npm install -g serve
-
-# COPY --from=build /app/frontend/dist ./
-
-# EXPOSE 8080
-# CMD ["serve", "-s", ".", "-l", "8080"]

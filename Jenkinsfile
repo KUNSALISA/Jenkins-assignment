@@ -1,5 +1,38 @@
+// pipeline {
+//     agent any
+//     stages {
+//         stage('Clone') {
+//             steps {
+//                 echo "Cloning repo..."
+//                 checkout scm
+//             }
+//         }
+//         stage('Build') {
+//             steps {
+//                 echo "Building project..."
+//             }
+//         }
+//         stage('Test') {
+//             steps {
+//                 echo "Running tests..."
+//             }
+//         }
+//         stage('Deploy') {
+//             steps {
+//                 echo "Deploying..."
+//             }
+//         }
+//     }
+// }
+
 pipeline {
     agent any
+    environment {
+        FIREBASE_TOKEN = credentials('firebase-token')
+    }
+    triggers {
+        githubPush()  
+    }
     stages {
         stage('Clone') {
             steps {
@@ -7,120 +40,30 @@ pipeline {
                 checkout scm
             }
         }
-        stage('Build') {
+        stage('Build Frontend') {
             steps {
-                echo "Building project..."
+                echo "Installing dependencies & building frontend..."
+                dir('frontend') {
+                    sh 'npm install'
+                    sh 'npm run build'
+                }
             }
         }
-        stage('Test') {
+        stage('Test Frontend') {
             steps {
-                echo "Running tests..."
+                echo "Running frontend tests..."
+                dir('frontend') {
+                    sh 'npm test' 
+                }
             }
         }
-        stage('Deploy') {
+        stage('Deploy to Firebase') {
             steps {
-                echo "Deploying..."
+                echo "Deploying to Firebase Hosting..."
+                dir('frontend') {
+                    sh 'firebase deploy --only hosting --token "$FIREBASE_TOKEN"'
+                }
             }
         }
     }
 }
-
-
-// pipeline {
-//     agent any
-
-//     environment {
-//         FIREBASE_TOKEN = credentials('firebase_token') 
-//     }
-
-//     stages {
-//         stage('Clone') {
-//             steps {
-//                 echo "Cloning repo..."
-//                 checkout scm
-//             }
-//         }
-
-//         stage('Build Frontend') {
-//             steps {
-//                 dir('frontend') {
-//                     echo "Installing dependencies..."
-//                     sh 'npm ci'
-
-//                     echo "Building frontend..."
-//                     sh 'npm run build'
-//                 }
-//             }
-//         }
-
-//         stage('Deploy to Firebase') {
-//             steps {
-//                 dir('frontend') {
-//                     echo "Deploying to Firebase..."
-//                     sh 'npx firebase deploy --token "$FIREBASE_TOKEN"'
-//                 }
-//             }
-//         }
-
-//         stage('Build Docker Image') {
-//             steps {
-//                 echo "Building Docker image for frontend..."
-//                 dir('frontend') {
-//                     sh 'docker build -t my-frontend-app:latest .'
-//                 }
-//             }
-//         }
-
-//         stage('Run with Docker Compose') {
-//             steps {
-//                 echo "Running with Docker Compose..."
-//                 sh 'docker-compose up -d'
-//             }
-//         }
-//     }
-// }
-
-// pipeline {
-//     agent any
-
-//     environment {
-//         IMAGE_NAME = "my-react-app"
-//         FIREBASE_TOKEN = credentials('firebase_token') 
-//     }
-
-//     stages {
-//         stage('Clone') {
-//             steps {
-//                 echo "Cloning repo..."
-//                 checkout scm
-//             }
-//         }
-
-//         stage('Build Docker Image') {
-//             steps {
-//                 echo "Building Docker image..."
-//                 sh 'docker build -t $IMAGE_NAME .'
-//             }
-//         }
-
-//         stage('Build React') {
-//             steps {
-//                 dir('frontend') {
-//                     echo "Installing & building React..."
-//                     sh 'npm ci'
-//                     sh 'npm run build'
-//                 }
-//             }
-//         }
-
-//         stage('Deploy to Firebase') {
-//             steps {
-//                 dir('frontend') {
-//                     echo "Deploying to Firebase..."
-//                     sh 'npm install -g firebase-tools'
-//                     sh 'firebase deploy --token=${FIREBASE_TOKEN}'
-//                 }
-//             }
-//         }
-//     }
-// }
